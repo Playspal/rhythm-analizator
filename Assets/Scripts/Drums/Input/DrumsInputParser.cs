@@ -14,24 +14,17 @@ namespace LooperPooper.Drums.Input
         public DrumsInputParser(DrumsInput drumsInput)
         {
             _drumsInput = drumsInput;
+            _drumsInput = LoadDrumsInput();
+            Debug.Log(JsonConvert.SerializeObject(_drumsInput));
         }
 
         public DrumsLoop Parse()
         {
-            //var path = Application.streamingAssetsPath + "/beat2.txt";
-
-            //var reader = new StreamReader(path);
-            //var jsonInput = (reader.ReadToEnd()).Trim();
-            //reader.Close();
-
-            //drumsInput = JsonConvert.DeserializeObject<DrumsInput>(jsonInput);
-
-            //var json = JsonConvert.SerializeObject(recording);
-            //Debug.Log(JsonConvert.SerializeObject(recording));
-
             var analyzers = new List<DrumsAnalyzer>()
             {
                 new DrumsAnalyzer(_drumsInput, 4, 16, 4, 0),
+                /*
+                 new DrumsAnalyzer(_drumsInput, 4, 16, 4, 0),
                 new DrumsAnalyzer(_drumsInput, 4, 16, 3, 1),
                 new DrumsAnalyzer(_drumsInput, 4, 16, 2, 2),
                 new DrumsAnalyzer(_drumsInput, 4, 16, 1, 3),
@@ -40,6 +33,7 @@ namespace LooperPooper.Drums.Input
                 new DrumsAnalyzer(_drumsInput, 3, 12, 3, 5),
                 new DrumsAnalyzer(_drumsInput, 3, 12, 2, 6),
                 new DrumsAnalyzer(_drumsInput, 3, 12, 1, 7)
+                */
             };
 
             var analyzer = analyzers.OrderByDescending(analyzer => analyzer.Error).Last();
@@ -47,6 +41,16 @@ namespace LooperPooper.Drums.Input
             Debug.Log(analyzer.OutputDrumsLoop.BeatsPerMinute + " // " + analyzer.OutputDrumsLoop.BeatsPerBar + " // " + analyzer.OutputDrumsLoop.Bars.Length);
             
             return analyzer.OutputDrumsLoop;
+        }
+
+        private DrumsInput LoadDrumsInput()
+        {
+            var path = Application.streamingAssetsPath + "/beat3.txt";
+            var reader = new StreamReader(path);
+            var jsonInput = (reader.ReadToEnd()).Trim();
+            reader.Close();
+
+            return JsonConvert.DeserializeObject<DrumsInput>(jsonInput);
         }
     }
 }

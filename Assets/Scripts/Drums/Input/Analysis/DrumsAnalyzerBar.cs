@@ -5,7 +5,7 @@ namespace LooperPooper.Drums.Input.Analysis
 {
     public class DrumsAnalyzerBar
     {
-        public IReadOnlyList<DrumsAnalyzerBeat> Beats => _beats;
+        public List<DrumsAnalyzerBeat> Beats => _beats;
         public float BeginTime => _beats.Count > 0 ? _beats[0].Source.Time : 0;
         public float Duration => _beats.Count > 0 ? _beats[^1].Time + _beats[^1].Duration : 0;
 

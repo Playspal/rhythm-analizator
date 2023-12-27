@@ -68,6 +68,7 @@ public class Index : MonoBehaviour
         _buttonReset.OnPress += () => _drums.InputBegin();
         
         //Record().Forget();
+        
     }
 
     private void Update()

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using LooperPooper.Drums.Input.Analysis.Comparison;
 using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
@@ -8,42 +7,54 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
     public class ProcessBarsResize : IProcess
     {
         private readonly List<DrumsAnalyzerBar> _bars;
+        private readonly int _timeSignature;
         private readonly float _barDuration;
+        private readonly float _beatDuration;
         private readonly float _barSize;
         
-        public ProcessBarsResize(List<DrumsAnalyzerBar> bars, float barDuration, int barSize)
+        public ProcessBarsResize(List<DrumsAnalyzerBar> bars, int timeSignature, float barDuration, float beatDuration, int barSize)
         {
             _bars = bars;
+            _timeSignature = timeSignature;
             _barDuration = barDuration;
+            _beatDuration = beatDuration;
             _barSize = barSize;
         }
 
         public void Process()
         {
-            var smallestDuration = _barDuration / _barSize;
             var time = 0f;
-        
+
+            for (var i = 0; i < _bars.Count - 1; i++)
+            {
+                var delta = _barDuration - _bars[i].Duration;
+
+                _bars[i].Beats[^1].Source.Duration += delta;
+                _bars[i + 1].Beats[0].Source.Duration -= delta;
+            }
+
             foreach (var bar in _bars)
             {
-                //smallestDuration = bar.Duration / _barSize;
-                
                 foreach (var beat in bar.Beats)
                 {
-                    beat.Source.Size = Mathf.Max(1, Mathf.RoundToInt(beat.Source.Duration / smallestDuration));
-                    beat.Source.Duration = smallestDuration * beat.Source.Size;
+                    // Round at this point is the key reason of potential errors in pattern parsing
+                    beat.Source.Size = Mathf.RoundToInt(beat.Source.Duration / _beatDuration);
+                    beat.Source.Duration = _beatDuration * beat.Source.Size;
                     beat.Source.Time = time;
 
                     time += beat.Source.Duration;
                 }
-
+                
+                // Hack: increase last beat duration to make bar duration size as desired
                 while (bar.Size < _barSize)
                 {
                     bar.Beats[^1].Source.Size++;
-                    bar.Beats[^1].Source.Duration += smallestDuration;
+                    bar.Beats[^1].Source.Duration += _beatDuration;
                     
-                    time += smallestDuration;
+                    time += _beatDuration;
                 }
 
+                // Hack: decrease longest beat duration to make bar duration size as desired
                 while (bar.Size > _barSize)
                 {
                     var beatBiggestSize = bar.Beats.ToList().Max(x => x.Source.Size);
@@ -59,9 +70,9 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
                         if (beat.Source.Size == beatBiggestSize)
                         {
                             beat.Source.Size--;
-                            beat.Source.Duration -= smallestDuration;
+                            beat.Source.Duration -= _beatDuration;
 
-                            time -= smallestDuration;
+                            time -= _beatDuration;
                             
                             beatFound = true;
                             continue;
@@ -69,7 +80,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
 
                         if (beatFound)
                         {
-                            beat.Source.Time -= smallestDuration;
+                            beat.Source.Time -= _beatDuration;
                         }
                     }
                 }

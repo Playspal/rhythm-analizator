@@ -5,28 +5,22 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
     public class ProcessBarsFill : IProcess
     {
         private readonly List<DrumsAnalyzerBar> _bars;
-        private readonly DrumsInput _drumsInput;
+        private readonly List<DrumsAnalyzerBeatSource> _beatSources;
         
-        public ProcessBarsFill(List<DrumsAnalyzerBar> bars, DrumsInput input)
+        public ProcessBarsFill(List<DrumsAnalyzerBar> bars, List<DrumsAnalyzerBeatSource> beatSources)
         {
             _bars = bars;
-            _drumsInput = input;
+            _beatSources = beatSources;
         }
         
         public void Process()
         {
-            // Fill first bar with recording data
-            _drumsInput.Entries.ForEach(entry =>
+            _beatSources.ForEach(beatSource =>
             {
                 var beat = new DrumsAnalyzerBeat
                 {
                     Bar = _bars[0],
-                    Source = new DrumsAnalyzerBeatSource
-                    {
-                        Type = entry.Type,
-                        Time = entry.Time,
-                        Duration = entry.Duration
-                    }
+                    Source = beatSource
                 };
             
                 _bars[0].AddToEnd(beat);

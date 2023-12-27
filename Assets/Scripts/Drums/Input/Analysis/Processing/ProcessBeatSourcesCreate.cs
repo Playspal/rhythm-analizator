@@ -18,14 +18,17 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
         
         public void Process()
         {
+            var index = 0;
             foreach (var drumsInputEntry in _drumsInput.Entries)
             {
-                _beatSources.Add(CreateBeatSource(drumsInputEntry));
+                _beatSources.Add(CreateBeatSource(drumsInputEntry, index));
+
+                index++;
             }
         }
 
-        private static DrumsAnalyzerBeatSource CreateBeatSource(DrumsInputEntry drumsInputEntry)
-            => new()
+        private static DrumsAnalyzerBeatSource CreateBeatSource(DrumsInputEntry drumsInputEntry, int index)
+            => new(index)
             {
                 Type = drumsInputEntry.Type,
                 Time = drumsInputEntry.Time,
