@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsDebug : IProcess
+    public class ProcessBarsDebug : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         private readonly string _title;
@@ -14,12 +14,14 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _title = title;
         }
         
-        public void Process()
+        public bool Process()
         {
             Debug.Log("----------------");
             Debug.Log(_title);
             
             _bars.ForEach(BarDebug);
+            
+            return true;
         }
         
         private static void BarDebug(DrumsAnalyzerBar bar)

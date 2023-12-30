@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsQuantize : IProcess
+    public class ProcessBarsQuantize : IProcess<bool>
     {
         private class Quantum
         {
@@ -205,9 +205,9 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             
         }
         
-        public void Process()
+        public bool Process()
         {
-            
+            return true;        
         }
     }
 }

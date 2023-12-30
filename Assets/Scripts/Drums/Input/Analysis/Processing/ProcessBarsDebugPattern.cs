@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsDebugPattern : IProcess
+    public class ProcessBarsDebugPattern : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         private readonly int _timeSignature;
@@ -16,13 +16,15 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _title = title;
         }
         
-        public void Process()
+        public bool Process()
         {
             Debug.Log("----------------");
             Debug.Log(_title);
             Debug.Log("BPM: " + Mathf.Round(_timeSignature / _bars[0].Duration * 60));
             
             _bars.ForEach(BarDebug);
+
+            return true;
         }
         
         private static void BarDebug(DrumsAnalyzerBar bar)

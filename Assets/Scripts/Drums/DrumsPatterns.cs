@@ -66,7 +66,7 @@ namespace LooperPooper.Drums
                     }
                 }
 
-                if (patternMask != sMask)
+                if (patternMask.Length != sMask.Length)
                 {
                     continue;
                 }
@@ -168,6 +168,12 @@ namespace LooperPooper.Drums
             "KxxKSxKxxxKxSxKx",
             "Kxxxxxxxxxxxxxxx",
             "KxxxxxxxKxxxxxxx",
+            "KxxxKxxxKxxxSxSx",
+            "KxxxKxxxKxxxxxSx",
+            "KxxxKxxxKxxxSxxx",
+            "KxxxxxxxKxxxSxSx",
+            "KxxxKxxxxxxxSxSx",
+            
 "KxKSxKKxKSxKKxKS",
 "xSSSSKKSSSSSKKKK",
 "xSSSSKKxxSSSxxxK",

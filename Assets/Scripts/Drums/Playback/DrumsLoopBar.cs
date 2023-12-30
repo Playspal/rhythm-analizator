@@ -12,5 +12,10 @@ namespace LooperPooper.Drums.Playback
             BeatsKick = beatsKick;
             BeatsSnare = beatsSnare;
         }
+
+        public bool IsEmptyAt(int index)
+        {
+            return BeatsKick[index].Type == DrumsBeatType.None && BeatsSnare[index].Type == DrumsBeatType.None;
+        }
     }
 }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsFill : IProcess
+    public class ProcessBarsFill : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         private readonly List<DrumsAnalyzerBeatSource> _beatSources;
@@ -13,7 +13,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _beatSources = beatSources;
         }
         
-        public void Process()
+        public bool Process()
         {
             _beatSources.ForEach(beatSource =>
             {
@@ -25,6 +25,8 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             
                 _bars[0].AddToEnd(beat);
             });
+            
+            return true;
         }
     }
 }

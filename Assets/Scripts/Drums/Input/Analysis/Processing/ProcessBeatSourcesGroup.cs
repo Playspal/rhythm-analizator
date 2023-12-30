@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBeatSourcesGroup : IProcess
+    public class ProcessBeatSourcesGroup : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBeatSource> _beatSources;
         private readonly int _timeSignature;
@@ -19,7 +19,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _barsCount = barsCount;
         }
         
-        public void Process()
+        public bool Process()
         {
             var initialDuration = _beatSources.Sum(beatSource => beatSource.Duration);
             
@@ -34,6 +34,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             new ProcessBarsBalance(bars, barDuration, beatsCount).Process();
             new ProcessBarsResize(bars, _timeSignature, barDuration, beatDuration, _barSize).Process();
             new ProcessBarsNormalize(bars, barDuration).Process();
+            //new ProcessBarsComparison(bars, _timeSignature, _barSize, beatDuration).Process();
             //new ProcessBarsDebug(bars, "T").Process();
             new ProcessBarsDebugPattern(bars, _timeSignature, "T").Process();
 
@@ -51,6 +52,8 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
 
                 time += beatSource.Duration;
             }
+            
+            return true;
         }
     }
 }

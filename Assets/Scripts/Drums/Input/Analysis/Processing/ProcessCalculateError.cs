@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessCalculateError : IProcess
+    public class ProcessCalculateError : IProcess<bool>
     {
         public float Error { get; private set; }
 
@@ -15,9 +15,10 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
         private readonly int _timeSignature;
         private readonly int _barSize;
         private readonly int _barsCount;
+        private readonly float _referenceBPM;
         
         public ProcessCalculateError(DrumsLoop drumsLoop, DrumsInput drumsInput, List<DrumsAnalyzerBeatSource> beatSources, 
-            int timeSignature, int barSize, int barsCount)
+            int timeSignature, int barSize, int barsCount, float referenceBPM)
         {
             _drumsLoop = drumsLoop;
             _drumsInput = drumsInput;
@@ -25,9 +26,10 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _timeSignature = timeSignature;
             _barSize = barSize;
             _barsCount = barsCount;
+            _referenceBPM = referenceBPM;
         }
 
-        public void Process()
+        public bool Process()
         {
             var beatDuration = 60f / _drumsLoop.BeatsPerMinute / (_drumsLoop.BeatsPerBar / 4);
             
@@ -59,11 +61,13 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
                 }
             }
             
-            var bpmError = Mathf.Abs(110 - _drumsLoop.BeatsPerMinute);
+            var bpmError = Mathf.Abs(_referenceBPM - _drumsLoop.BeatsPerMinute);
 
-            Error = kickError + snareError + bpmError * 0.01f;
+            Error = kickError + snareError + bpmError * 1f;
 
             Debug.Log(_barSize + " / " + _barsCount + " >> " + kickError + " + " + snareError + " = " + (kickError + snareError) + "; bpmError = " + bpmError + "; Total error = " + Error);
+            
+            return true;
         }
 
         public void Process2()

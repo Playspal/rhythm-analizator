@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsResize : IProcess
+    public class ProcessBarsResize : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         private readonly int _timeSignature;
@@ -21,7 +21,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _barSize = barSize;
         }
 
-        public void Process()
+        public bool Process()
         {
             var time = 0f;
 
@@ -85,6 +85,8 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
                     }
                 }
             }
+            
+            return true;
         }
     }
 }

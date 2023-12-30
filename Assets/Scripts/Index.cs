@@ -35,7 +35,8 @@ public class Index : MonoBehaviour
 
     private void Awake()
     {
-        Texture = new Texture2D(1920, 600);
+        Texture = new Texture2D(1920, 600, TextureFormat.RGB24, false);
+        
         _debugTexture.texture = Texture;
         
         AndroidNativeAudio.makePool();

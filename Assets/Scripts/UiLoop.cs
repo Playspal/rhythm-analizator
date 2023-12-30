@@ -44,7 +44,7 @@ public class UiLoop : MonoBehaviour
                 
                 _beats.Add(beatInstance);
                 count++;
-                if (count == bar.BeatsKick.Length / 4)
+                if (count == 4)
                 {
                     isA = !isA;
                     count = 0;

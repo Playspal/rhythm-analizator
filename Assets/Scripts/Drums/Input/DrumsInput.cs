@@ -33,8 +33,7 @@ namespace LooperPooper.Drums.Input
             UpdateLastEntryDuration();
             Entries.Add(new DrumsInputEntry(beat, GetRelativeTime(), 0));
         }
-
-
+        
         private void UpdateLastEntryDuration()
         {
             if (Entries.Count <= 0)

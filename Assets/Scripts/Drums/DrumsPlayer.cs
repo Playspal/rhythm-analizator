@@ -52,17 +52,27 @@ namespace LooperPooper.Drums
                 {
                     AndroidNativeAudio.play(_snare, 0.75f);
                 }
-                
-                if (Pointer % 2 == 0)
+
+                if (DrumsLoop.BeatsPerMinute < 120)
                 {
-                    AndroidNativeAudio.play(_hat, 0.1f);
+                    if (Pointer % 2 == 0)
+                    {
+                        AndroidNativeAudio.play(_hat, 0.1f);
+                    }
+                }
+                else
+                {
+                    if (Pointer % 4 == 0)
+                    {
+                        AndroidNativeAudio.play(_hat, 0.1f);
+                    }   
                 }
 
                 if (_pointerBar == DrumsLoop.Bars.Length - 1)
                 {
                     if (_pointerBeat == DrumsLoop.BeatsPerBar - 2)
                     {
-                        AndroidNativeAudio.play(_crash, 0.5f);
+                        //AndroidNativeAudio.play(_crash, 0.5f);
                     }
                 }
                 

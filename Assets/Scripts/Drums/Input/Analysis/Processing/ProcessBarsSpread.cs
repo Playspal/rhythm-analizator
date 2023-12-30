@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsSpread : IProcess
+    public class ProcessBarsSpread : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         private readonly float _barDuration;
@@ -13,7 +13,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _barDuration = barDuration;
         }
         
-        public void Process()
+        public bool Process()
         {
             // Move beats to next bar until bar duration longer desired duration
             for (var i = 0; i < _bars.Count - 1; i++)
@@ -28,6 +28,8 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
                     operation.TryDo(DrumsAnalyzerBarOperationType.AtoB);
                 }
             }
+            
+            return true;
         }
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsBalance : IProcess
+    public class ProcessBarsBalance : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         private readonly float _barDuration;
@@ -19,7 +19,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _totalBeatsCount = totalBeatsCount;
         }
         
-        public void Process()
+        public bool Process()
         {
             var operationTypes = Enum
                 .GetValues(typeof(DrumsAnalyzerBarOperationType))
@@ -84,6 +84,8 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
                     }
                 }
             }
+
+            return true;
         }
     }
 }

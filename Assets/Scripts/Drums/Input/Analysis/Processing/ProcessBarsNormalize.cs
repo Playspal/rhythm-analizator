@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsNormalize : IProcess
+    public class ProcessBarsNormalize : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         private readonly float _barDuration;
@@ -13,7 +13,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _barDuration = barDuration;
         }
         
-        public void Process()
+        public bool Process()
         {
             var time = 0f;
 
@@ -30,6 +30,8 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
                     time += beat.Source.Duration;
                 }
             }
+            
+            return true;
         }
     }
 }

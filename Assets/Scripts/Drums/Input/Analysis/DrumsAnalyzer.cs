@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Linq;
-using LooperPooper.Drums.Input.Analysis.Comparison;
 using LooperPooper.Drums.Input.Analysis.Processing;
 using LooperPooper.Drums.Playback;
 using UnityEngine;
@@ -10,27 +8,32 @@ namespace LooperPooper.Drums.Input.Analysis
     public class DrumsAnalyzer
     {
         public DrumsLoop OutputDrumsLoop => _processGenerateOutput.OutputDrumsLoop;
-        public float Error => _processCalculateError.Error;
-
+        
         private readonly ProcessCalculateError _processCalculateError;
         private readonly ProcessGenerateOutput _processGenerateOutput;
         
-        public DrumsAnalyzer(DrumsInput drumsInput, int timeSignature, int barSize, int barsCount, int attempt)
+        public DrumsAnalyzer(DrumsInput drumsInput, int timeSignature)
         {
-            var beatSources = new List<DrumsAnalyzerBeatSource>();
-            new ProcessBeatSourcesCreate(drumsInput, beatSources).Process();
-            new ProcessBeatSourcesQuantize(beatSources, timeSignature, barSize, barsCount).Process();
-            return;
-            new ProcessBeatSourcesGroup(beatSources, timeSignature, barSize, barsCount).Process();
+            //new ProcessCalculateTest(drumsInput).Process();
+            //Debug.LogError("----");
+            //OutputTimeSignature = new ProcessCalculateTimeSignature(drumsInput).Process();
             
+            var barsCount = new ProcessCalculateBarsCount(drumsInput, timeSignature).Process();
+            var barSize = timeSignature * 4;
+            var bpm = new ProcessCalculateBPM(drumsInput, barsCount).Process();
             
-            _processGenerateOutput = new ProcessGenerateOutput(beatSources, timeSignature, barsCount);
+            Debug.Log("Time signature: " + timeSignature);
+            Debug.Log("Bars count: " + barsCount);
+            Debug.Log("Bar size: " + barSize);
+            Debug.Log("BPM: " + bpm);
+
+            var beatSources = new ProcessBeatSourcesCreate(drumsInput).Process();
+            new ProcessBeatSourcesQuantize(beatSources, barSize, barsCount).Process();
+            
+            _processGenerateOutput = new ProcessGenerateOutput(beatSources, bpm, timeSignature, barSize, barsCount);
             _processGenerateOutput.Process();
             
-            _processCalculateError = new ProcessCalculateError(OutputDrumsLoop, drumsInput, beatSources, timeSignature, barSize, barsCount);
-            _processCalculateError.Process();
-            
-            //
+            return;
 
             for (var i = 0; i < barSize * barsCount; i++)
             {
@@ -38,12 +41,15 @@ namespace LooperPooper.Drums.Input.Analysis
                 var x = 10 + Mathf.RoundToInt(t * 200);
                 var y = 0;
 
-                for (var yy = 0; yy < 5; yy++)
+                var yyy = i % barSize == 0 ? 100 : 10;
+                
+                for (var yy = 0; yy < yyy; yy++)
                 {
                     Index.Texture.SetPixel(x, y + yy, Color.green);
                 }
             }
             
+
             foreach (var entry in drumsInput.Entries)
             {
                 var x = 10 + Mathf.RoundToInt(entry.Time * 200);
@@ -61,7 +67,7 @@ namespace LooperPooper.Drums.Input.Analysis
             foreach (var beatSource in beatSources)
             {
                 var x = 10 + Mathf.RoundToInt(beatSource.Time * 200);
-                var y = 10 + 30 + attempt * 30;
+                var y = 10 + 30 + 1 * 30;
                 
                 
                 for (var yy = 0; yy < (beatSource.Type == DrumsBeatType.Kick ? 10 : 20); yy++)
@@ -70,40 +76,10 @@ namespace LooperPooper.Drums.Input.Analysis
                 }
             }
             
-            Index.Texture.SetPixel(Mathf.RoundToInt(beatSources.Sum(beatSource => beatSource.Duration) * 200), 10 + 30 + attempt * 30, Color.blue);
-            Index.Texture.SetPixel(Mathf.RoundToInt(beatSources.Sum(beatSource => beatSource.Duration) * 200) + 1, 10 + 30 + attempt * 30, Color.blue);
-            
-            
-
-            
-            var beatDuration = 60f / OutputDrumsLoop.BeatsPerMinute / (OutputDrumsLoop.BeatsPerBar / timeSignature);
-            for (var i = 0; i < OutputDrumsLoop.Bars.Length; i++)
-            {
-                for (var j = 0; j < OutputDrumsLoop.Bars[i].BeatsKick.Length; j++)
-                {
-                    if(OutputDrumsLoop.Bars[i].BeatsKick[j].Type == DrumsBeatType.None && OutputDrumsLoop.Bars[i].BeatsSnare[j].Type == DrumsBeatType.None)
-                    {
-                        continue;
-                    }
-                    
-                    var index = i * OutputDrumsLoop.Bars[i].BeatsKick.Length + j;
-                    var time = beatDuration * index;
-                    
-                    var x = 10 + Mathf.RoundToInt(time * 200);
-                    var y = 10 + 15 + attempt * 30;
-
-                    for (var yy = 0; yy < 10; yy++)
-                    {
-                        Index.Texture.SetPixel(x, y + yy, Color.red);    
-                    }
-                }
-            }
-            
-            Index.Texture.SetPixel(10 + Mathf.RoundToInt(beatDuration * barSize * barsCount * 200), 10 + 15 + attempt * 30, Color.red);
-            Index.Texture.SetPixel(10 + Mathf.RoundToInt(beatDuration * barSize * barsCount * 200) + 1, 10 + 15 + attempt * 30, Color.red);
+            Index.Texture.SetPixel(Mathf.RoundToInt(beatSources.Sum(beatSource => beatSource.Duration) * 200), 10 + 30 + 1 * 30, Color.blue);
+            Index.Texture.SetPixel(Mathf.RoundToInt(beatSources.Sum(beatSource => beatSource.Duration) * 200) + 1, 10 + 30 + 1 * 30, Color.blue);
             
             Index.Texture.Apply();
         }
-
     }
 }

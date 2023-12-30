@@ -2,33 +2,32 @@ using System.Collections.Generic;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    /// <summary>
-    /// Convert DrumsInput entries in to DrumsAnalyzerBeatSource items
-    /// </summary>
-    public class ProcessBeatSourcesCreate : IProcess
+    public class ProcessBeatSourcesCreate : IProcess<List<DrumsAnalyzerBeatSource>>
     {
         private readonly DrumsInput _drumsInput;
-        private readonly List<DrumsAnalyzerBeatSource> _beatSources;
         
-        public ProcessBeatSourcesCreate(DrumsInput drumsInput, List<DrumsAnalyzerBeatSource> beatSources)
+        public ProcessBeatSourcesCreate(DrumsInput drumsInput)
         {
             _drumsInput = drumsInput;
-            _beatSources = beatSources;
         }
         
-        public void Process()
+        public List<DrumsAnalyzerBeatSource> Process()
         {
+            var output = new List<DrumsAnalyzerBeatSource>();
+            
             var index = 0;
+            
             foreach (var drumsInputEntry in _drumsInput.Entries)
             {
-                _beatSources.Add(CreateBeatSource(drumsInputEntry, index));
-
+                output.Add(CreateBeatSource(drumsInputEntry, index));
                 index++;
             }
+            
+            return output;
         }
 
         private static DrumsAnalyzerBeatSource CreateBeatSource(DrumsInputEntry drumsInputEntry, int index)
-            => new(index)
+            => new(index, drumsInputEntry.Time, drumsInputEntry.Duration)
             {
                 Type = drumsInputEntry.Type,
                 Time = drumsInputEntry.Time,

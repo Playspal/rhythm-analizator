@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
@@ -8,227 +7,212 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
     /// <summary>
     /// Quantize DrumsAnalyzerBeatSource items time and duration.
     /// </summary>
-    public class ProcessBeatSourcesQuantize : IProcess
+    public class ProcessBeatSourcesQuantize : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBeatSource> _beatSources;
-        private readonly int _timeSignature;
         private readonly int _barSize;
         private readonly int _barsCount;
         
-        public ProcessBeatSourcesQuantize(List<DrumsAnalyzerBeatSource> beatSources, int timeSignature, int barSize, int barsCount)
+        public ProcessBeatSourcesQuantize(List<DrumsAnalyzerBeatSource> beatSources, int barSize, int barsCount)
         {
             _beatSources = beatSources;
-            _timeSignature = timeSignature;
             _barSize = barSize;
             _barsCount = barsCount;
         }
-        
-        public void Process()
+
+        public bool Process()
+        {
+            var steps = new int[] {64, 32, 16, 8, 4, 2, 1};
+
+            foreach (var step in steps)
+            {
+                Quantize(_barSize * _barsCount * step);
+            }
+
+            return true;
+        }
+
+        private void Quantize(int beatsCount)
         {
             var initialDuration = _beatSources.Sum(beatSource => beatSource.Duration);
             var barDuration = initialDuration / _barsCount;
             var beatDuration = barDuration / _barSize;
-            var beatsCount = _barSize * _barsCount;
+            //var beatsCount = _barSize * _barsCount;
 
-            for (var x = 0; x < 1; x++)
+            var slots = CreateSlots(beatsCount);
+            var weights = CreateWeights(slots, beatsCount);
+
+            for (var i = 0; i < beatsCount; i++)
             {
-                var powersQ = Powers(_timeSignature);
-                var powersH = Powers(_timeSignature * 2);
-                var powersF = Powers(_timeSignature * 4);
-                var powersD = Powers(_timeSignature * 8);
+                var indexLeft = i > 0 ? i - 1 : i;
+                var indexCenter = i;
+                var indexRight = i < beatsCount - 2 ? i + 1 : i;
 
-                var powers = new List<float>();
+                var weightLeft = weights[indexLeft];
+                var weightCenter = weights[indexCenter];
+                var weightRight = weights[indexRight];
 
-                var powersQIndex = 0;
-                var powersHIndex = 0;
-                var powersFIndex = 0;
-                var powersDIndex = 0;
+                var isLeftAvailable = slots[indexLeft] == null;
+                var isRightAvailable = slots[indexRight] == null;
+
+                var weightTreshold = weightCenter * 1;
                 
-                for (var i = 0; i < beatsCount; i++)
+                if (isLeftAvailable && isRightAvailable)
                 {
-                    powers.Add(0);
-
-                    powers[i] += powersQ[powersQIndex];
-                    powers[i] += powersH[powersHIndex];
-                    powers[i] += powersF[powersFIndex];
-                    powers[i] += powersD[powersDIndex];
-
-                    powersQIndex++;
-                    powersHIndex++;
-                    powersFIndex++;
-                    powersDIndex++;
-
-                    if (powersQIndex >= powersQ.Count)
+                    if (weightLeft > weightRight && weightLeft > weightTreshold)
                     {
-                        powersQIndex = 0;
+                        slots[indexLeft] = slots[indexCenter];
+                        slots[indexCenter] = null;
                     }
-
-                    if (powersHIndex >= powersH.Count)
+                
+                    else if (weightRight > weightLeft && weightRight > weightTreshold)
                     {
-                        powersHIndex = 0;
+                        slots[indexRight] = slots[indexCenter];
+                        slots[indexCenter] = null;
+                        
+                        i++;
                     }
-
-                    if (powersFIndex >= powersF.Count)
-                    {
-                        powersFIndex = 0;
-                    }
-
-                    if (powersDIndex >= powersD.Count)
-                    {
-                        powersDIndex = 0;
-                    }
-                }
-
-                var powersMax = powers.Max();
-
-                for (var i = 0; i < powers.Count; i++)
-                {
-                    //powers[i] /= powersMax;
                 }
                 
-                for (var i = 0; i < powers.Count; i++)
+                else if (isLeftAvailable && !isRightAvailable && weightLeft > weightTreshold)
                 {
-                    //powers[i] *= powers[i];
+                    slots[indexLeft] = slots[indexCenter];
+                    slots[indexCenter] = null;
                 }
-
-                var slots = new DrumsAnalyzerBeatSource[beatsCount];
-
-                for (var i = 0; i < beatsCount; i++)
+                
+                else if (!isLeftAvailable && isRightAvailable && weightRight > weightTreshold)
                 {
-                    var boundsMin = i * beatDuration - beatDuration / 2;
-                    var boundsMax = i * beatDuration + beatDuration - beatDuration / 2;
+                    slots[indexRight] = slots[indexCenter];
+                    slots[indexCenter] = null;
 
-                    foreach (var beatSource in _beatSources)
-                    {
-                        if (beatSource.Time < boundsMin || beatSource.Time >= boundsMax)
-                        {
-                            continue;
-                        }
-
-                        //beatSource.Time = i * beatDuration;
-                        slots[i] = beatSource;
-                        break;
-                    }
+                    i++;
                 }
+            }
 
-                for (var i = 0; i < beatsCount; i++)
+            for (var i = 0; i < beatsCount; i++)
+            {
+                if (slots[i] == null)
                 {
-                    var indexLeft = i > 0 ? i - 1 : 0;
-                    var indexCenter = i;
-                    var indexRight = i < beatsCount - 1 ? i + 1 : i;
+                    continue;
+                }
+                
+                slots[i].Time = i * beatDuration;
+            }
 
-                    var powerLeft = powers[indexLeft];
-                    var powerCenter = powers[indexCenter];
-                    var powerRight = powers[indexRight];
+            foreach (var beatSource in _beatSources.Where(beatSource => !slots.Contains(beatSource)))
+            {
+                beatSource.Time = Mathf.Round(beatSource.Time / beatDuration) * beatDuration;
+            }
+            
+            for (var i = 0; i < _beatSources.Count - 1; i++)
+            {
+                _beatSources[i].Duration = _beatSources[i + 1].Time - _beatSources[i].Time;
+                _beatSources[i].Size = Mathf.RoundToInt(_beatSources[i].Duration / beatDuration);
+            }
 
-                    var isLeftLeftFree = i > 1 && slots[i - 2] == null;
-                    var isRightRightFree = i < beatsCount - 2 && slots[i + 2] == null;
+            _beatSources[^1].Duration = initialDuration - _beatSources[^1].Time;
+            _beatSources[^1].Size = Mathf.RoundToInt(_beatSources[^1].Duration / beatDuration);
+        }
 
-                    if (slots[indexCenter] == null)
+        private DrumsAnalyzerBeatSource[] CreateSlots(int beatsCount)
+        {
+            var initialDuration = _beatSources.Sum(beatSource => beatSource.Duration);
+            var barDuration = initialDuration / _barsCount;
+            var beatDuration = barDuration / _barSize;
+            //var beatsCount = _barSize * _barsCount;
+            
+            var slots = new DrumsAnalyzerBeatSource[beatsCount];
+            var filter = new List<DrumsAnalyzerBeatSource>();
+            
+            for (var i = 0; i < beatsCount; i++)
+            {
+                if (slots[i] != null)
+                {
+                    continue;
+                }
+                
+                var boundsOffset = beatDuration / 2;
+                var boundsCenter = i * beatDuration;
+                var boundsMin = boundsCenter - boundsOffset;
+                var boundsMax = boundsCenter + boundsOffset;
+
+                foreach (var beatSource in _beatSources)
+                {
+                    if (beatSource.Time < boundsMin || beatSource.Time >= boundsMax || filter.Contains(beatSource))
                     {
                         continue;
                     }
 
-                    if (powerLeft > powerCenter && powerLeft > powerRight && slots[indexLeft] == null)
+                    for (var j = i; j < beatsCount; j++)
                     {
-                        slots[indexLeft] = slots[indexCenter];
-                        slots[indexLeft].Time = indexLeft * beatDuration;
-                        slots[indexCenter] = null;
-                    }
-
-                    if (indexRight > powerCenter && powerRight > powerLeft && slots[indexRight] == null)
-                    {
-                        slots[indexRight] = slots[indexCenter];
-                        slots[indexRight].Time = indexRight * beatDuration;
-                        slots[indexCenter] = null;
-                    }
-                }
-
-
-                for (var i = 0; i < _beatSources.Count - 1; i++)
-                {
-                    _beatSources[i].Duration = _beatSources[i + 1].Time - _beatSources[i].Time;
-                    
-                }
-                
-                var d = string.Empty;
-                
-                powers.ForEach(v =>
-                {
-                    d += v + "; ";
-                });
-                
-                Debug.Log(d);
-            }
-        }
-
-        private List<float> PowersEmpty(int size)
-        {
-            var powers = new List<float>();
-
-            for (var i = 0; i < size; i++)
-            {
-                powers.Add(0);
-            }
-
-            return powers;
-        }
-
-        private List<float> Powers(int size)
-        {
-            var initialDuration = _beatSources.Sum(beatSource => beatSource.Duration);
-            var barDuration = initialDuration / _barsCount;
-            var beatDuration = barDuration / _barSize;
-            
-            var powers = new List<float>();
-
-            for (var i = 0; i < size; i++)
-            {
-                powers.Add(0);
-            }
-            
-            var index = 0f;
-
-            while (index < _barSize * _barsCount)
-            {
-                for (var i = 0; i < size; i++)
-                {
-                    if (i == 0)
-                    {
-                        powers[i] += 2f;
-                       // powers[i] += 1f;
-                    }
-                    
-                    if (i == size / 2)
-                    {
-                        powers[i] += 1f;
-                       // powers[i] += 0.5f;//size / 2;
-                    }
-
-                    var boundsOffset = beatDuration * 0.5f;
-                    var boundsCenter = index * beatDuration;
-                    var boundsMin = boundsCenter - boundsOffset;
-                    var boundsMax = boundsCenter + boundsOffset;
-
-                    foreach (var beatSource in _beatSources)
-                    {
-                        if (beatSource.Time < boundsMin || beatSource.Time >= boundsMax)
+                        if (slots[j] != null)
                         {
                             continue;
                         }
-
-                        var distance = 1 - Mathf.Abs(boundsCenter - beatSource.Time) / boundsOffset;
                         
-                        powers[i] += 1;//distance * distance;
-
-                        //break;
+                        slots[j] = beatSource;
+                        filter.Add(beatSource);
+                            
+                        break;
                     }
-
-                    index++;
                 }
             }
 
-            return powers;
+            return slots;
+        }
+
+        private float[] CreateWeights(DrumsAnalyzerBeatSource[] slots, int beatsCount)
+        {
+            //var beatsCount = _barSize * _barsCount;
+            
+            var weightsCycle = CreateWeightsGroup(slots, beatsCount, _barSize);
+            var weightsCycleIndex = 0;
+            
+            var weights = new float[beatsCount];
+
+            for(var i = 0; i < beatsCount; i++)
+            {
+                if (i % 4 == 0)
+                {
+                    weights[i] += 4;
+                }
+                
+                weights[i] += weightsCycle[weightsCycleIndex];
+
+                weightsCycleIndex++;
+
+                if (weightsCycleIndex >= weightsCycle.Length)
+                {
+                    weightsCycleIndex = 0;
+                }
+            }
+
+            return weights;
+        }
+
+        private float[] CreateWeightsGroup(DrumsAnalyzerBeatSource[] slots, int beatsCount, int size)
+        {
+            if (size == 0)
+            {
+                Debug.LogError("CreateWeightsGroup > Size was zero");
+                size = beatsCount;
+            }
+            
+//            var beatsCount = _barSize * _barsCount;
+            var weights = new float[size];
+
+            var index = 0;
+            
+            while (index < beatsCount)
+            {
+                for (var i = 0; i < size; i++)
+                {
+                    weights[i] += slots[index] == null ? 0 : 1f;
+                    index++;
+                }
+            }
+            
+            return weights;
         }
     }
 }

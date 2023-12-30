@@ -4,7 +4,7 @@ using LooperPooper.Drums.Input.Analysis.Comparison;
 
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public class ProcessBarsFindGroups : IProcess
+    public class ProcessBarsFindGroups : IProcess<bool>
     {
         private readonly List<DrumsAnalyzerBar> _bars;
         
@@ -13,7 +13,7 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
             _bars = bars;
         }
         
-        public void Process()
+        public bool Process()
         {
             for (var i = 0; i < 100; i++)
             {
@@ -92,6 +92,8 @@ namespace LooperPooper.Drums.Input.Analysis.Processing
                     }
                 }
             }
+            
+            return true;
         }
         
         private static List<DrumsAnalyzerBeat> GetAllBeatsAt(List<DrumsAnalyzerBar> bars, int index)

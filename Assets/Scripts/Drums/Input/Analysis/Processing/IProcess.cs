@@ -1,7 +1,7 @@
 namespace LooperPooper.Drums.Input.Analysis.Processing
 {
-    public interface IProcess
+    public interface IProcess<out TResult>
     {
-        void Process();
+        TResult Process();
     }
 }
